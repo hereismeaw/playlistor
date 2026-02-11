@@ -261,6 +261,12 @@ a{
     color: #ffffff;
 }
 
+.banner p a{
+    color: #ffffff;
+    text-decoration: underline;
+    font-weight: 700;
+}
+
 .banner p a:hover{
     color: #000000;
 }
