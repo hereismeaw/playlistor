@@ -80,8 +80,14 @@ def grouper(n, iterable):
         yield chunk
 
 
+_redis_client = None
+
+
 def get_redis_client():
-    return redis.Redis.from_url(settings.REDIS_URL)
+    global _redis_client
+    if _redis_client is None:
+        _redis_client = redis.Redis.from_url(settings.REDIS_URL)
+    return _redis_client
 
 
 def generate_auth_token() -> str:

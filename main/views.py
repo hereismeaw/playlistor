@@ -10,6 +10,7 @@ from jsonschema.exceptions import ValidationError as JsonSchemaValitadionError
 
 from main import oauth_manager
 
+from .counters import PLAYLIST_COUNTER_KEY
 from .decorators import login_required
 from .models import Playlist, Subscriber
 from .tasks import generate_applemusic_playlist, generate_spotify_playlist
@@ -122,7 +123,7 @@ def sitemap_xml(request):
 @login_required(login_url="/login")
 def index(request):
     redis_client = get_redis_client()
-    count = int((redis_client.get("counter:playlists") or 0))
+    count = int(redis_client.get(PLAYLIST_COUNTER_KEY) or 0)
     playlists = Playlist.objects.filter(
         spotify_url__isnull=False, applemusic_url__isnull=False
     ).order_by("-created_at")[:3]
