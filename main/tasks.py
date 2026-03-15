@@ -7,7 +7,7 @@ from main.cache import cache_with_key
 from main.models import Playlist
 from playlistor.celery import app  # noqa
 
-from .counters import Counters
+from .counters import incr_playlist_counter
 from .matching import are_tracks_same, track_similarity
 from .services import AppleMusicService, SpotifyService
 from .utils import (
@@ -18,8 +18,6 @@ from .utils import (
 )
 
 logger = get_task_logger(__name__)
-
-counters = Counters()
 
 
 def search_isrc_cache_key(service, track):
@@ -138,7 +136,7 @@ def generate_spotify_playlist(self, url):
 
     playlist_url = f"https://open.spotify.com/playlist/{destination_playlist_id}"
 
-    counters.incr_playlist_counter()
+    incr_playlist_counter()
     logger.info(f"Missed {len(missed_tracks)} in {n} track(s)")
     Playlist.objects.create(
         name=source_playlist.name,
@@ -200,7 +198,7 @@ def generate_applemusic_playlist(self, url, access_token):
             raise self.retry(exc=e, countdown=30)
         else:
             raise e
-    counters.incr_playlist_counter()
+    incr_playlist_counter()
     logger.info(f"Missed {len(missed_tracks)} in {n} track(s)")
     return {
         "playlist_url": None,
