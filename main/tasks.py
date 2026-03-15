@@ -1,5 +1,3 @@
-import re
-
 import requests
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -12,18 +10,16 @@ from playlistor.celery import app  # noqa
 from .counters import Counters
 from .matching import are_tracks_same, track_similarity
 from .services import AppleMusicService, SpotifyService
-from .utils import parse_track_name, strip_qs
+from .utils import (
+    extract_apple_music_playlist_info,
+    extract_spotify_playlist_id,
+    parse_track_name,
+    strip_qs,
+)
 
 logger = get_task_logger(__name__)
 
 counters = Counters()
-
-SPOTIFY_PLAYLIST_URL_PAT = re.compile(
-    r"http(s)?:\/\/open.spotify.com/(user\/.+\/)?playlist/(?P<playlist_id>[^\s?]+)"
-)
-APPLE_MUSIC_PLAYLIST_URL_PAT = re.compile(
-    r"https:\/\/(embed.)?music\.apple\.com\/(?P<storefront>.{2})\/playlist(\/.+)?\/(?P<playlist_id>[^\s?]+)"
-)
 
 
 def search_isrc_cache_key(service, track):
@@ -109,8 +105,7 @@ def generate_spotify_playlist(self, url):
     source_service = AppleMusicService()
     destination_service = SpotifyService()
 
-    playlist_id = APPLE_MUSIC_PLAYLIST_URL_PAT.match(url).group("playlist_id")
-    storefront = APPLE_MUSIC_PLAYLIST_URL_PAT.match(url).group("storefront")
+    playlist_id, storefront = extract_apple_music_playlist_info(url)
     source_playlist = source_service.get_playlist(playlist_id, storefront=storefront)
 
     track_ids = []
@@ -166,7 +161,7 @@ def generate_applemusic_playlist(self, url, access_token):
     url = strip_qs(url)
     logger.info(f"Generating apple music equivalent of spotify playlist:{url}")
     progress_recorder = ProgressRecorder(self)
-    playlist_id = SPOTIFY_PLAYLIST_URL_PAT.match(url).group("playlist_id")
+    playlist_id = extract_spotify_playlist_id(url)
     source_service = SpotifyService()
     destination_service = AppleMusicService(access_token=access_token)
 

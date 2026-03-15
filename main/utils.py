@@ -19,11 +19,25 @@ from main import oauth_manager
 from .client import AppleMusicClient
 
 SPOTIFY_PLAYLIST_URL_PAT = re.compile(
-    r"http(s)?:\/\/open.spotify.com/(user\/.+\/)?playlist/(?P<playlist_id>[^\s?]+)"
+    r"https?://open\.spotify\.com/(user/.+/)?playlist/(?P<playlist_id>[^\s?]+)"
 )
 APPLE_MUSIC_PLAYLIST_URL_PAT = re.compile(
-    r"https:\/\/(embed.)?music\.apple\.com\/(?P<storefront>.{2})\/playlist(\/.+)?\/(?P<playlist_id>[^\s?]+)"
+    r"https://(embed\.)?music\.apple\.com/(?P<storefront>.{2})/playlist(/.+)?/(?P<playlist_id>[^\s?]+)"
 )
+
+
+def extract_spotify_playlist_id(url):
+    match = SPOTIFY_PLAYLIST_URL_PAT.match(url)
+    if not match:
+        raise ValueError(f"Invalid Spotify playlist URL: {url}")
+    return match.group("playlist_id")
+
+
+def extract_apple_music_playlist_info(url):
+    match = APPLE_MUSIC_PLAYLIST_URL_PAT.match(url)
+    if not match:
+        raise ValueError(f"Invalid Apple Music playlist URL: {url}")
+    return match.group("playlist_id"), match.group("storefront")
 
 
 def requests_retry_session(
